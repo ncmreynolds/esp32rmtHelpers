@@ -65,12 +65,21 @@ class esp32rmtTransmitHelper	{
 
 class esp32rmtReceiveHelper	{
 	public:
-		esp32rmtReceiveHelper();														//Constructor function
-		~esp32rmtReceiveHelper();														//Destructor function
-		bool begin(uint8_t numberOfReceivers = 1);										//Initialise one or more receivers
-
+		esp32rmtReceiveHelper();													//Constructor function
+		~esp32rmtReceiveHelper();													//Destructor function
+		bool begin(uint8_t numberOfReceivers = 1);									//Initialise one or more receivers
+		bool configure_rx_pin_(uint8_t index, int8_t pin, bool inverted = true);	//Configure a pin for RX on the current available channel
+		uint8_t maximumNumberOfSymbols();											//Maximum number of symbols
+		uint8_t numberOfReceivedSymbols(uint8_t index);								//Number of symbols received by a receiver
+		uint8_t receivedSymbolLevel0(uint8_t index, uint16_t symbolIndex);			//Getters for the symbol data
+		uint8_t receivedSymbolLevel1(uint8_t index, uint16_t symbolIndex);
+		uint16_t receivedSymbolDuration0(uint8_t index, uint16_t symbolIndex);
+		uint16_t receivedSymbolDuration1(uint8_t index, uint16_t symbolIndex);
+		void resume_reception_(uint8_t index);										//Resume reception on a specific channel
+		
 		//Debug
-		Stream *debug_uart_ = nullptr;													//The stream used for debugging
+		void debug(Stream &);													//Enable debugging on a stream, eg. Serial, which must already be started
+		Stream *debug_uart_ = nullptr;											//The stream used for debugging
 
 	protected:
 

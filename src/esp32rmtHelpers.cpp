@@ -90,7 +90,6 @@ bool esp32rmtTransmitHelper::configure_tx_pin_(uint8_t index, int8_t pin)
 	};
 	infrared_transmitter_config_[index].flags = {
 		.with_dma = false,
-		//.allow_pd = 1,
 	};
 	if(rmt_new_tx_channel(&infrared_transmitter_config_[index], &infrared_transmitter_handle_[index]) == ESP_OK)
 	{
@@ -131,12 +130,6 @@ bool esp32rmtTransmitHelper::addSymbol(uint8_t index, uint16_t duration0, uint8_
 		symbols_to_transmit_[index][number_of_symbols_to_transmit_[index]].level0 = level0;
 		symbols_to_transmit_[index][number_of_symbols_to_transmit_[index]].duration1 = duration1;
 		symbols_to_transmit_[index][number_of_symbols_to_transmit_[index]].level1 = level1;
-		/*
-		if(debug_uart_ != nullptr)
-		{
-			debug_uart_->printf_P(PSTR("esp32rmtTransmitHelper: Transmitter %u added symbol %u %u/%u %u/%u\r\n"), index, number_of_symbols_to_transmit_[index], duration0, level0, duration1, level1);
-		}
-		*/
 		number_of_symbols_to_transmit_[index] = number_of_symbols_to_transmit_[index] + 1;
 		return true;
 	}
@@ -152,8 +145,6 @@ bool esp32rmtTransmitHelper::transmit_stored_buffer_(uint8_t transmitterIndex, b
 			debug_uart_->printf_P(PSTR("esp32rmtTransmitHelper: symbol %02u - %s:%04u/%s:%04u\r\n"), index, (symbols_to_transmit_[transmitterIndex][index].level0 == 0 ? "Off":"On"), symbols_to_transmit_[transmitterIndex][index].duration0, (symbols_to_transmit_[transmitterIndex][index].level1 == 0 ? "Off":"On"), symbols_to_transmit_[transmitterIndex][index].duration1);
 		}
 	}
-	//number_of_symbols_to_transmit_[transmitterIndex] = 0;
-	//return true;
 	uint32_t sendStart = micros();
 	esp_err_t result = rmt_transmit(infrared_transmitter_handle_[transmitterIndex], copy_encoder_, symbols_to_transmit_[transmitterIndex], number_of_symbols_to_transmit_[transmitterIndex]*sizeof(rmt_symbol_word_t), &event_transmitter_config_);	
 	if(wait == true)	//Block until transmitted
@@ -199,6 +190,7 @@ esp32rmtReceiveHelper::~esp32rmtReceiveHelper()		//Destructor function
  */
 bool esp32rmtReceiveHelper::begin(uint8_t numberOfReceivers)
 {
+	bool initialisation_success_ = true;
 	number_of_receivers_ = numberOfReceivers;											//Record the number of receivers
 	infrared_receiver_handle_ = new rmt_channel_handle_t[number_of_receivers_];			//Create array of RMT handle(s)
 	infrared_receiver_config_ = new rmt_rx_channel_config_t[number_of_receivers_];		//Create array of RMT configuration(s)	
@@ -210,6 +202,88 @@ bool esp32rmtReceiveHelper::begin(uint8_t numberOfReceivers)
 		received_symbols_[index] = new rmt_symbol_word_t[maximum_number_of_symbols_];	//Create symbol buffers
 		number_of_received_symbols_[index] = 0;											//Set received buffer length to zero
 		message_data_[index] = new uint8_t[maximum_message_length_];					//Create data buffer
+	}
+	return initialisation_success_;
+}
+bool esp32rmtReceiverHelperRxDoneCallback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
+{
+	*(uint8_t *)(user_data) = edata->num_symbols;
+	return false;
+}
+bool esp32rmtReceiveHelper::configure_rx_pin_(uint8_t index, int8_t pin, bool inverted)
+{
+	infrared_receiver_config_[index] = {
+		.gpio_num = static_cast<gpio_num_t>(pin),
+		.clk_src = RMT_CLK_SRC_DEFAULT,
+		.resolution_hz = 1000000,
+		.mem_block_symbols = maximum_number_of_symbols_,
+	};
+	infrared_receiver_config_[index].flags = {
+		.invert_in = inverted,
+		.with_dma = false,
+	};
+	if(rmt_new_rx_channel(&infrared_receiver_config_[index], &infrared_receiver_handle_[index]) == ESP_OK)
+	{
+		rmt_rx_event_callbacks_t receive_callbacks_ = {
+			.on_recv_done = esp32rmtReceiverHelperRxDoneCallback
+		};
+		rmt_rx_register_event_callbacks(infrared_receiver_handle_[index], &receive_callbacks_, &number_of_received_symbols_[index]);
+		rmt_enable(infrared_receiver_handle_[index]);
+		rmt_receive(infrared_receiver_handle_[index], received_symbols_[index], maximum_number_of_symbols_*sizeof(rmt_symbol_word_t), &global_receiver_config_);
+		if(debug_uart_ != nullptr)
+		{
+			debug_uart_->printf_P(PSTR("esp32rmtReceiveHelper: configured pin %u for RX\r\n"), pin);
+		}
+		return true;
+	}
+	else
+	{
+		if(debug_uart_ != nullptr)
+		{
+			debug_uart_->printf_P(PSTR("esp32rmtReceiveHelper: failed to configure pin %u for RX\r\n"), pin);
+		}
+	}
+	return false;
+}
+uint8_t esp32rmtReceiveHelper::numberOfReceivedSymbols(uint8_t index)
+{
+	if(index < number_of_receivers_)
+	{
+		return number_of_received_symbols_[index];
+	}
+	return 0;
+}
+uint8_t esp32rmtReceiveHelper::receivedSymbolLevel0(uint8_t index, uint16_t symbolIndex)
+{
+	return received_symbols_[index][symbolIndex].level0;
+}
+uint8_t esp32rmtReceiveHelper::receivedSymbolLevel1(uint8_t index, uint16_t symbolIndex)
+{
+	return received_symbols_[index][symbolIndex].level1;
+}
+uint16_t esp32rmtReceiveHelper::receivedSymbolDuration0(uint8_t index, uint16_t symbolIndex)
+{
+	return received_symbols_[index][symbolIndex].duration0;
+}
+uint16_t esp32rmtReceiveHelper::receivedSymbolDuration1(uint8_t index, uint16_t symbolIndex)
+{
+	return received_symbols_[index][symbolIndex].duration1;
+}
+uint8_t esp32rmtReceiveHelper::maximumNumberOfSymbols()	//Maximum number of symbols
+{
+	return maximum_number_of_symbols_;
+}
+void esp32rmtReceiveHelper::resume_reception_(uint8_t index)
+{
+	number_of_received_symbols_[index] = 0;
+	rmt_receive(infrared_receiver_handle_[index], received_symbols_[index], maximum_number_of_symbols_*sizeof(rmt_symbol_word_t), &global_receiver_config_);
+}
+void esp32rmtReceiveHelper::debug(Stream &terminalStream)
+{
+	debug_uart_ = &terminalStream;		//Set the stream used for the terminal
+	if(debug_uart_ != nullptr)
+	{
+		debug_uart_->print(F("esp32rmtReceiveHelper: debug enabled\r\n"));
 	}
 }
 #endif
