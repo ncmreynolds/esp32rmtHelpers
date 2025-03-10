@@ -25,12 +25,12 @@ class esp32rmtTransmitHelper	{
 		void setCarrierFrequency(uint16_t frequency);							//Must be done before begin(), default is 56000
 		void setDutyCycle(uint8_t duty, uint8_t transmitterIndex = 0);			//Must be done before begin(), default is 50 and very unlikely to change
 		void setMaximumNumberOfSymbols(uint8_t symbols);						//Must be done before begin(), default is 64
-		bool configure_tx_pin_(uint8_t index, int8_t pin);						//Configure a pin for TX on the current available channel
+		bool configureTxPin(uint8_t index, int8_t pin);							//Configure a pin for TX on the current available channel
 		bool transmitterBusy(uint8_t index);									//Can check if busy before starting another transmission
 		uint8_t maximumNumberOfSymbols();										//Maximum number of symbols
 		bool addSymbol(uint8_t index, uint16_t duration0, uint8_t level0,		//Add a symbol to the buffer for the specified transmitter channel
 			uint16_t duration1, uint8_t level1);
-		bool transmit_stored_buffer_(uint8_t transmitterIndex,					//Transmit a buffer from the specified transmitter channel
+		bool transmitSymbols(uint8_t transmitterIndex,							//Transmit a buffer from the specified transmitter channel
 				bool wait = false);
 
 		//Debug
@@ -68,14 +68,14 @@ class esp32rmtReceiveHelper	{
 		esp32rmtReceiveHelper();													//Constructor function
 		~esp32rmtReceiveHelper();													//Destructor function
 		bool begin(uint8_t numberOfReceivers = 1);									//Initialise one or more receivers
-		bool configure_rx_pin_(uint8_t index, int8_t pin, bool inverted = true);	//Configure a pin for RX on the current available channel
+		bool configureRxPin(uint8_t index, int8_t pin, bool inverted = true);		//Configure a pin for RX on the current available channel
 		uint8_t maximumNumberOfSymbols();											//Maximum number of symbols
 		uint8_t numberOfReceivedSymbols(uint8_t index);								//Number of symbols received by a receiver
 		uint8_t receivedSymbolLevel0(uint8_t index, uint16_t symbolIndex);			//Getters for the symbol data
 		uint8_t receivedSymbolLevel1(uint8_t index, uint16_t symbolIndex);
 		uint16_t receivedSymbolDuration0(uint8_t index, uint16_t symbolIndex);
 		uint16_t receivedSymbolDuration1(uint8_t index, uint16_t symbolIndex);
-		void resume_reception_(uint8_t index);										//Resume reception on a specific channel
+		void resume(uint8_t index);													//Resume reception on a specific channel
 		
 		//Debug
 		void debug(Stream &);													//Enable debugging on a stream, eg. Serial, which must already be started

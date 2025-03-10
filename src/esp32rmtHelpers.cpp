@@ -79,7 +79,7 @@ void esp32rmtTransmitHelper::setMaximumNumberOfSymbols(uint8_t symbols)				//Mus
 		maximum_number_of_symbols_ = symbols;
 	}
 }
-bool esp32rmtTransmitHelper::configure_tx_pin_(uint8_t index, int8_t pin)
+bool esp32rmtTransmitHelper::configureTxPin(uint8_t index, int8_t pin)
 {
 	infrared_transmitter_config_[index] = {
 		.gpio_num = static_cast<gpio_num_t>(pin),
@@ -135,7 +135,7 @@ bool esp32rmtTransmitHelper::addSymbol(uint8_t index, uint16_t duration0, uint8_
 	}
 	return false;
 }
-bool esp32rmtTransmitHelper::transmit_stored_buffer_(uint8_t transmitterIndex, bool wait)	//Transmit a buffer from the specified transmitter channel
+bool esp32rmtTransmitHelper::transmitSymbols(uint8_t transmitterIndex, bool wait)	//Transmit a buffer from the specified transmitter channel
 {
 	if(debug_uart_ != nullptr)
 	{
@@ -210,7 +210,7 @@ bool esp32rmtReceiverHelperRxDoneCallback(rmt_channel_handle_t channel, const rm
 	*(uint8_t *)(user_data) = edata->num_symbols;
 	return false;
 }
-bool esp32rmtReceiveHelper::configure_rx_pin_(uint8_t index, int8_t pin, bool inverted)
+bool esp32rmtReceiveHelper::configureRxPin(uint8_t index, int8_t pin, bool inverted)
 {
 	infrared_receiver_config_[index] = {
 		.gpio_num = static_cast<gpio_num_t>(pin),
@@ -273,7 +273,7 @@ uint8_t esp32rmtReceiveHelper::maximumNumberOfSymbols()	//Maximum number of symb
 {
 	return maximum_number_of_symbols_;
 }
-void esp32rmtReceiveHelper::resume_reception_(uint8_t index)
+void esp32rmtReceiveHelper::resume(uint8_t index)
 {
 	number_of_received_symbols_[index] = 0;
 	rmt_receive(infrared_receiver_handle_[index], received_symbols_[index], maximum_number_of_symbols_*sizeof(rmt_symbol_word_t), &global_receiver_config_);
