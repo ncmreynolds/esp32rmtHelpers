@@ -1,4 +1,3 @@
-#ifndef esp32rmtHelpers_cpp
 /*
  *	An Arduino library to provide 'helpers' for the RMT peripheral on ESP32 when sending remote-control style infrared signals
  *
@@ -11,7 +10,11 @@
  *	Released under LGPL-2.1 see https://github.com/ncmreynolds/esp32rmtHelpers/LICENSE for full license
  *
  */
+#ifndef esp32rmtHelpers_cpp
+#define esp32rmtHelpers_cpp
+
 #include <esp32rmtHelpers.h>
+
 esp32rmtTransmitHelper::esp32rmtTransmitHelper()	//Constructor function
 {
 }
@@ -176,6 +179,7 @@ bool esp32rmtTransmitHelper::transmitSymbols(uint8_t transmitterIndex, bool wait
 	}
 	return false;
 }
+/*
 void esp32rmtTransmitHelper::debug(Stream &terminalStream)
 {
 	debug_uart_ = &terminalStream;		//Set the stream used for the terminal
@@ -184,6 +188,8 @@ void esp32rmtTransmitHelper::debug(Stream &terminalStream)
 		debug_uart_->print(F("esp32rmtTransmitHelper: debug enabled\r\n"));
 	}
 }
+*/
+
 esp32rmtReceiveHelper::esp32rmtReceiveHelper()		//Constructor function
 {
 }
@@ -285,6 +291,7 @@ void esp32rmtReceiveHelper::resume(uint8_t index)
 	number_of_received_symbols_[index] = 0;
 	rmt_receive(infrared_receiver_handle_[index], received_symbols_[index], maximum_number_of_symbols_*sizeof(rmt_symbol_word_t), &global_receiver_config_);
 }
+/*
 void esp32rmtReceiveHelper::debug(Stream &terminalStream)
 {
 	debug_uart_ = &terminalStream;		//Set the stream used for the terminal
@@ -293,4 +300,5 @@ void esp32rmtReceiveHelper::debug(Stream &terminalStream)
 		debug_uart_->print(F("esp32rmtReceiveHelper: debug enabled\r\n"));
 	}
 }
+*/
 #endif

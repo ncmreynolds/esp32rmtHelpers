@@ -11,13 +11,15 @@
  *
  */
 #ifndef esp32rmtHelpers_h
-#include <Arduino.h>						//Standard Arduino library
+#define esp32rmtHelpers_h
 
+#include <Arduino.h>						//Standard Arduino library
+#include <infraredHelpers.h>
 
 #include "driver/rmt_tx.h"
 #include "driver/rmt_rx.h"
 
-class esp32rmtTransmitHelper	{
+class esp32rmtTransmitHelper : public infraredHelpers {
 	public:
 		esp32rmtTransmitHelper();												//Constructor function
 		~esp32rmtTransmitHelper();												//Destructor function
@@ -34,8 +36,8 @@ class esp32rmtTransmitHelper	{
 				bool wait = false);
 
 		//Debug
-		void debug(Stream &);													//Enable debugging on a stream, eg. Serial, which must already be started
-		Stream *debug_uart_ = nullptr;											//The stream used for debugging
+		//void debug(Stream &);													//Enable debugging on a stream, eg. Serial, which must already be started
+		//Stream *debug_uart_ = nullptr;											//The stream used for debugging
 
 	protected:
 
@@ -63,7 +65,7 @@ class esp32rmtTransmitHelper	{
 
 };
 
-class esp32rmtReceiveHelper	{
+class esp32rmtReceiveHelper : public infraredHelpers {
 	public:
 		esp32rmtReceiveHelper();													//Constructor function
 		~esp32rmtReceiveHelper();													//Destructor function
@@ -78,8 +80,8 @@ class esp32rmtReceiveHelper	{
 		void resume(uint8_t index);													//Resume reception on a specific channel
 		
 		//Debug
-		void debug(Stream &);													//Enable debugging on a stream, eg. Serial, which must already be started
-		Stream *debug_uart_ = nullptr;											//The stream used for debugging
+		//void debug(Stream &);													//Enable debugging on a stream, eg. Serial, which must already be started
+		//Stream *debug_uart_ = nullptr;											//The stream used for debugging
 
 	protected:
 
