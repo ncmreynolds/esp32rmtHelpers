@@ -62,15 +62,17 @@ bool esp32rmtTransmitHelper::begin(uint8_t numberOfTransmitters)
 	}
 	for(uint8_t index = 0; index < number_of_transmitters_; index++)
 	{
-		symbols_to_transmit_[index] = new rmt_symbol_word_t[maximum_number_of_symbols_];
+		symbols_to_transmit_[index] = new rmt_symbol_word_t[getMaximumNumberOfSymbols()];
 		number_of_symbols_to_transmit_[index] = 0;
 	}
 	return initialisation_success_;
 }
+
 void esp32rmtTransmitHelper::setCarrierFrequency(uint16_t frequency)				//Must be done before begin(), default is 56000
 {
 	global_transmitter_config_.frequency_hz = frequency;
 }
+
 void esp32rmtTransmitHelper::setDutyCycle(uint8_t duty, uint8_t transmitterIndex)	//Must be done before begin(), default is 50 and very unlikely to change
 {
 	if(duty > 4 && duty < 76)
@@ -82,20 +84,14 @@ void esp32rmtTransmitHelper::setDutyCycle(uint8_t duty, uint8_t transmitterIndex
 		}
 	}
 }
-void esp32rmtTransmitHelper::setMaximumNumberOfSymbols(uint8_t symbols)				//Must be done before begin(), default is 64
-{
-	if(symbols > 48)																//There is a minimum of 48
-	{
-		maximum_number_of_symbols_ = symbols;
-	}
-}
+
 bool esp32rmtTransmitHelper::configureTxPin(uint8_t index, int8_t pin)
 {
 	infrared_transmitter_config_[index] = {
 		.gpio_num = static_cast<gpio_num_t>(pin),
 		.clk_src = RMT_CLK_SRC_DEFAULT,
 		.resolution_hz = 1000000, // 1MHz resolution, 1 tick = 1us
-		.mem_block_symbols = maximum_number_of_symbols_,
+		.mem_block_symbols = getMaximumNumberOfSymbols(),
 		.trans_queue_depth = 4,
 	};
 	infrared_transmitter_config_[index].flags = {
@@ -124,17 +120,10 @@ bool esp32rmtTransmitHelper::configureTxPin(uint8_t index, int8_t pin)
 	}
 	return false;
 }
-bool esp32rmtTransmitHelper::transmitterBusy(uint8_t index)
-{
-	return number_of_symbols_to_transmit_[index] != 0;
-}
-uint8_t esp32rmtTransmitHelper::maximumNumberOfSymbols()	//Maximum number of symbols
-{
-	return maximum_number_of_symbols_;
-}
+
 bool esp32rmtTransmitHelper::addSymbol(uint8_t index, uint16_t duration0, uint8_t level0, uint16_t duration1, uint8_t level1)
 {
-	if(number_of_symbols_to_transmit_[index] < maximum_number_of_symbols_)
+	if(number_of_symbols_to_transmit_[index] < getMaximumNumberOfSymbols())
 	{
 		symbols_to_transmit_[index][number_of_symbols_to_transmit_[index]].duration0 = duration0;
 		symbols_to_transmit_[index][number_of_symbols_to_transmit_[index]].level0 = level0;
@@ -179,16 +168,10 @@ bool esp32rmtTransmitHelper::transmitSymbols(uint8_t transmitterIndex, bool wait
 	}
 	return false;
 }
-/*
-void esp32rmtTransmitHelper::debug(Stream &terminalStream)
+bool esp32rmtTransmitHelper::transmitterBusy(uint8_t index)		//Used to check if busy before starting another transmission
 {
-	debug_uart_ = &terminalStream;		//Set the stream used for the terminal
-	if(debug_uart_ != nullptr)
-	{
-		debug_uart_->print(F("esp32rmtTransmitHelper: debug enabled\r\n"));
-	}
+	return number_of_symbols_to_transmit_[index] != 0;
 }
-*/
 
 esp32rmtReceiveHelper::esp32rmtReceiveHelper()		//Constructor function
 {
@@ -209,12 +192,10 @@ bool esp32rmtReceiveHelper::begin(uint8_t numberOfReceivers)
 	infrared_receiver_config_ = new rmt_rx_channel_config_t[number_of_receivers_];		//Create array of RMT configuration(s)	
 	received_symbols_ = new rmt_symbol_word_t*[number_of_receivers_];					//Create array of symbol buffer(s)
 	number_of_received_symbols_ = new uint8_t[number_of_receivers_];					//Create array of symbol buffer length(s)
-	message_data_ = new uint8_t*[number_of_receivers_];									//Create array of data buffer(s)
 	for(uint8_t index = 0; index < number_of_receivers_; index++)
 	{
-		received_symbols_[index] = new rmt_symbol_word_t[maximum_number_of_symbols_];	//Create symbol buffers
+		received_symbols_[index] = new rmt_symbol_word_t[getMaximumNumberOfSymbols()];	//Create symbol buffers
 		number_of_received_symbols_[index] = 0;											//Set received buffer length to zero
-		message_data_[index] = new uint8_t[maximum_message_length_];					//Create data buffer
 	}
 	return initialisation_success_;
 }
@@ -229,7 +210,7 @@ bool esp32rmtReceiveHelper::configureRxPin(uint8_t index, int8_t pin, bool inver
 		.gpio_num = static_cast<gpio_num_t>(pin),
 		.clk_src = RMT_CLK_SRC_DEFAULT,
 		.resolution_hz = 1000000,
-		.mem_block_symbols = maximum_number_of_symbols_,
+		.mem_block_symbols = getMaximumNumberOfSymbols(),
 	};
 	infrared_receiver_config_[index].flags = {
 		.invert_in = inverted,
@@ -242,7 +223,7 @@ bool esp32rmtReceiveHelper::configureRxPin(uint8_t index, int8_t pin, bool inver
 		};
 		rmt_rx_register_event_callbacks(infrared_receiver_handle_[index], &receive_callbacks_, &number_of_received_symbols_[index]);
 		rmt_enable(infrared_receiver_handle_[index]);
-		rmt_receive(infrared_receiver_handle_[index], received_symbols_[index], maximum_number_of_symbols_*sizeof(rmt_symbol_word_t), &global_receiver_config_);
+		rmt_receive(infrared_receiver_handle_[index], received_symbols_[index], getMaximumNumberOfSymbols()*sizeof(rmt_symbol_word_t), &global_receiver_config_);
 		if(debug_uart_ != nullptr)
 		{
 			debug_uart_->printf_P(PSTR("esp32rmtReceiveHelper: configured pin %u for RX\r\n"), pin);
@@ -257,14 +238,6 @@ bool esp32rmtReceiveHelper::configureRxPin(uint8_t index, int8_t pin, bool inver
 		}
 	}
 	return false;
-}
-uint8_t esp32rmtReceiveHelper::numberOfReceivedSymbols(uint8_t index)
-{
-	if(index < number_of_receivers_)
-	{
-		return number_of_received_symbols_[index];
-	}
-	return 0;
 }
 uint8_t esp32rmtReceiveHelper::receivedSymbolLevel0(uint8_t index, uint16_t symbolIndex)
 {
@@ -282,23 +255,10 @@ uint16_t esp32rmtReceiveHelper::receivedSymbolDuration1(uint8_t index, uint16_t 
 {
 	return received_symbols_[index][symbolIndex].duration1;
 }
-uint8_t esp32rmtReceiveHelper::maximumNumberOfSymbols()	//Maximum number of symbols
-{
-	return maximum_number_of_symbols_;
-}
+
 void esp32rmtReceiveHelper::resume(uint8_t index)
 {
 	number_of_received_symbols_[index] = 0;
-	rmt_receive(infrared_receiver_handle_[index], received_symbols_[index], maximum_number_of_symbols_*sizeof(rmt_symbol_word_t), &global_receiver_config_);
+	rmt_receive(infrared_receiver_handle_[index], received_symbols_[index], getMaximumNumberOfSymbols()*sizeof(rmt_symbol_word_t), &global_receiver_config_);
 }
-/*
-void esp32rmtReceiveHelper::debug(Stream &terminalStream)
-{
-	debug_uart_ = &terminalStream;		//Set the stream used for the terminal
-	if(debug_uart_ != nullptr)
-	{
-		debug_uart_->print(F("esp32rmtReceiveHelper: debug enabled\r\n"));
-	}
-}
-*/
 #endif
