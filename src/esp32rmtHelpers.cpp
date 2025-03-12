@@ -70,7 +70,14 @@ void esp32rmtTransmitHelper::setCarrierFrequency(uint16_t frequency)				//Must b
 }
 void esp32rmtTransmitHelper::setDutyCycle(uint8_t duty, uint8_t transmitterIndex)	//Must be done before begin(), default is 50 and very unlikely to change
 {
-	global_transmitter_config_.duty_cycle = float(duty)/100.0;
+	if(duty > 4 && duty < 76)
+	{
+		global_transmitter_config_.duty_cycle = float(duty)/100.0;
+		if(debug_uart_ != nullptr)
+		{
+			debug_uart_->printf_P(PSTR("esp32rmtTransmitHelper: duty cycle set at %u%%\r\n"), duty);
+		}
+	}
 }
 void esp32rmtTransmitHelper::setMaximumNumberOfSymbols(uint8_t symbols)				//Must be done before begin(), default is 64
 {
