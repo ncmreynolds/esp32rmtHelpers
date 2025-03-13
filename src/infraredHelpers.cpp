@@ -19,7 +19,8 @@ uint8_t infraredHelpers::getMaximumNumberOfSymbols()	//Maximum number of symbols
 }
 void infraredHelpers::setMaximumNumberOfSymbols(uint8_t symbols)				//Must be done before begin(), default is 48
 {
-	if(symbols > 48)															//There is a minimum of 48 on ESP32
+	
+	if(maximum_number_of_symbols_ > minimum_number_of_symbols_)					//There is a minimum value on ESP32/RMT
 	{
 		maximum_number_of_symbols_ = symbols;
 		if(debug_uart_ != nullptr)

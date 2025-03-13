@@ -25,7 +25,16 @@ class infraredHelpers
 		Stream *debug_uart_ = nullptr;													//The stream used for debugging
 	
 	private:
-		uint8_t maximum_number_of_symbols_ = 48;										//Absolute maximum number of symbols, 48 is due to ESP32 minimum
+		#if CONFIG_IDF_TARGET_ESP32C3
+			uint8_t minimum_number_of_symbols_ = 48;									//48 is ESP32C3 minimum
+		#elif CONFIG_IDF_TARGET_ESP32S2
+			uint8_t minimum_number_of_symbols_ = 64;									//64 is ESP32S2 minimum
+		#elif CONFIG_IDF_TARGET_ESP32S3
+			uint8_t minimum_number_of_symbols_ = 64;									//64 is ESP32S3 minimum
+		#else
+			uint8_t minimum_number_of_symbols_ = 64;									//64 is ESP32 minimum
+		#endif
+		uint8_t maximum_number_of_symbols_ = minimum_number_of_symbols_;				//Default to minimum
 };
 
 class infraredTransmitHelper
