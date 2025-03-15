@@ -12,7 +12,7 @@
  */
 #ifndef esp32rmtHelpers_cpp
 #define esp32rmtHelpers_cpp
-
+#if defined ESP32
 #include <esp32rmtHelpers.h>
 
 esp32rmtTransmitHelper::esp32rmtTransmitHelper()	//Constructor function
@@ -172,6 +172,7 @@ bool esp32rmtTransmitHelper::transmitterBusy(uint8_t index)		//Used to check if 
 {
 	return number_of_symbols_to_transmit_[index] != 0;
 }
+esp32rmtTransmitHelper transmitHelper;	//Create an instance of the class, as only one is practically usable at a time despite not being a singleton
 
 esp32rmtReceiveHelper::esp32rmtReceiveHelper()		//Constructor function
 {
@@ -261,4 +262,6 @@ void esp32rmtReceiveHelper::resume(uint8_t index)
 	number_of_received_symbols_[index] = 0;
 	rmt_receive(infrared_receiver_handle_[index], received_symbols_[index], getMaximumNumberOfSymbols()*sizeof(rmt_symbol_word_t), &global_receiver_config_);
 }
+esp32rmtReceiveHelper receiveHelper;	//Create an instance of the class, as only one is practically usable at a time despite not being a singleton
+#endif
 #endif

@@ -12,7 +12,7 @@
  */
 #ifndef esp32rmtHelpers_h
 #define esp32rmtHelpers_h
-
+#if defined ESP32
 #include <Arduino.h>						//Standard Arduino library
 #include <infraredHelpers.h>
 
@@ -56,6 +56,7 @@ class esp32rmtTransmitHelper : public infraredHelpers, public infraredTransmitHe
 		rmt_symbol_word_t** symbols_to_transmit_ = nullptr;						//Symbol buffers
 
 };
+extern esp32rmtTransmitHelper transmitHelper;	//Create an instance of the class, as only one is practically usable at a time despite not being a singleton
 
 class esp32rmtReceiveHelper : public infraredHelpers, public infraredReceiveHelper {
 	public:
@@ -83,5 +84,6 @@ class esp32rmtReceiveHelper : public infraredHelpers, public infraredReceiveHelp
 		//Symbol buffers
 		rmt_symbol_word_t** received_symbols_;									//Symbol buffers
 };
-
+extern esp32rmtReceiveHelper receiveHelper;	//Create an instance of the class, as only one is practically usable at a time despite not being a singleton
+#endif
 #endif
