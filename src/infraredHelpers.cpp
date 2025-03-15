@@ -13,6 +13,10 @@ infraredHelpers::infraredHelpers()	//Constructor function
 infraredHelpers::~infraredHelpers()	//Destructor function
 {
 }
+uint8_t infraredHelpers::getMinimumNumberOfSymbols()	//Maximum number of symbols
+{
+	return minimum_number_of_symbols_;
+}
 uint8_t infraredHelpers::getMaximumNumberOfSymbols()	//Maximum number of symbols
 {
 	return maximum_number_of_symbols_;
@@ -121,7 +125,7 @@ uint16_t infraredReceiveHelper::receivedSymbolDuration1(uint8_t index, uint16_t 
 {
 	return 0;
 }
-uint8_t infraredReceiveHelper::infraredReceiveHelper::getNumberOfReceivedSymbols(uint8_t index)
+uint8_t infraredReceiveHelper::getNumberOfReceivedSymbols(uint8_t index)
 {
 	if(index < number_of_receivers_)
 	{

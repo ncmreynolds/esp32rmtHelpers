@@ -12,6 +12,7 @@ class infraredHelpers
 		//Symbol count
 		uint8_t getMaximumNumberOfSymbols();											//Maximum number of symbols
 		void setMaximumNumberOfSymbols(uint8_t symbols);								//Must be done before begin(), default is 48
+		uint8_t getMinimumNumberOfSymbols();											//Minimum number of symbols, which varies by platform
 		//Message length
 		uint8_t getMaximumMessageLength(uint8_t length);								//Get the maximum message length
 		void setMaximumMessageLength(uint8_t length);									//Set the maximum message length
@@ -21,6 +22,7 @@ class infraredHelpers
 	
 	protected:
 		uint8_t maximum_message_length_ = 2;											//Maximum size of a message, without preamble, start bits etc.
+		uint8_t maximum_number_of_symbols_ = 24;										//Default to minimum
 
 		Stream *debug_uart_ = nullptr;													//The stream used for debugging
 	
@@ -34,7 +36,6 @@ class infraredHelpers
 		#else
 			uint8_t minimum_number_of_symbols_ = 64;									//64 is ESP32 minimum
 		#endif
-		uint8_t maximum_number_of_symbols_ = minimum_number_of_symbols_;				//Default to minimum
 };
 
 class infraredTransmitHelper
